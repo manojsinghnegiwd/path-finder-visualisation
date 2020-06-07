@@ -1,4 +1,4 @@
-Sorting visualization using p5.js
+Path finding visualization using p5.js
 ====================
 
 <img src="./visulization.gif">
