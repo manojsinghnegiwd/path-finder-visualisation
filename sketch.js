@@ -1,7 +1,7 @@
-let w = 100 
+let w = 50
 let grid;
-let cols = Math.floor(850/w)
-let rows = Math.floor(850/w)
+let cols = 0
+let rows = 0
 
 let optimalPath = []
 
@@ -9,9 +9,100 @@ let start = null
 let end = null
 let currentNode = null
 
+let openSet = []
+let closedSet = []
+
 let alreadyVisited = []
 
-async function getBestNeighbour (neighbours, end) {
+
+function heuristic(a, b) {
+    return dist(a.i, a.j, b.i, b.j)
+}
+
+function getBestNode(nodes) {
+    let minFScore = 0
+    let minIndex = 0
+
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].fScore < minFScore) {
+            minFScore = nodes[i].fScore
+            minIndex = i
+        }
+    }
+
+    return nodes[minIndex]
+}
+
+function removeNode(node, nodes) {
+    for (let i = nodes.length; i >= 0; i--) {
+        if (nodes[i] === node) {
+            nodes.splice(i, 1)
+        }
+    }
+}
+
+function findElement(node, nodes) {
+    let index = -1
+
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i] === node) {
+            index = i
+        }
+    }
+
+    if (index > -1) {
+        return nodes[index]
+    }
+
+    return null
+}
+
+function aStar(start, end, h) {
+    let openSet = [start]
+    let closedSet = []
+
+    while (openSet.length) {
+        currentNode = getBestNode(openSet)
+
+        if (currentNode === end || currentNode.wall) {
+            return
+        }
+
+        removeNode(currentNode, openSet)
+        closedSet.push(currentNode)
+
+        let neighbours = currentNode.neighbours
+
+        for (let i = 0; i < neighbours.length; i++) {
+            if (!findElement(neighbours[i], closedSet) && !neighbours[i].wall) {
+                let tempGScore = currentNode.gScore + dist(currentNode.i, currentNode.j, neighbours[i].i, neighbours[i].j)
+
+                var newPath = false
+                if (findElement(neighbours[i], openSet)) {
+                    if (tempGScore < neighbours[i].gScore) {
+                        neighbours[i].gScore = tempGScore
+                        newPath = true
+                    }
+                } else {
+                    neighbours[i].gScore = tempGScore
+                    newPath = true
+                    openSet.push(neighbours[i])
+                }
+
+                // Yes, it's a better path
+                if (newPath) {
+                    neighbours[i].cameFrom = currentNode
+                    neighbours[i].fScore = neighbours[i].gScore + h(neighbours[i], end)
+                }
+            }
+        }
+    }
+
+    return []
+
+}
+
+async function getBestNeighbour(neighbours, end) {
 
     await new Promise(resolve => setTimeout(resolve, 100))
 
@@ -42,9 +133,9 @@ async function getBestNeighbour (neighbours, end) {
     return validNeighbours[minIndex]
 }
 
-async function findPath (current) {
+async function findPath(current) {
     currentNode = current
-    
+
     if (!current) {
         return
     }
@@ -63,13 +154,16 @@ async function findPath (current) {
 
     let bestNeighbour = await getBestNeighbour(current.neighbours, end)
 
-    await findPath(bestNeighbour)   
+    await findPath(bestNeighbour)
 }
 
-function gridNode (i, j, isWall) {
+function gridNode(i, j, isWall) {
     this.i = i
     this.j = j
     this.wall = isWall
+    this.cameFrom = null
+    this.gScore = 0
+    this.fScore = 0
 
     this.neighbours = []
 
@@ -118,8 +212,11 @@ function gridNode (i, j, isWall) {
 }
 
 function setup() {
-    createCanvas(850, 850)
+    cols = Math.floor(windowWidth / w)
+    rows = Math.floor(windowHeight / w)
     grid = new Array(cols)
+
+    createCanvas(windowWidth, windowHeight)
 
     for (let i = 0; i < grid.length; i++) {
         grid[i] = new Array(rows)
@@ -127,7 +224,7 @@ function setup() {
 
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
-            grid[i][j] = new gridNode(i*w + 25, j*w + 25, random(0, 5) > 4)
+            grid[i][j] = new gridNode(i * w + 25, j * w + 25, random(0, 5) > 4)
         }
     }
 
@@ -139,16 +236,57 @@ function setup() {
 
     start = grid[0][0]
     end = grid[cols - 1][rows - 1]
+
+    openSet.push(start)
+
 }
 
 function draw() {
     background(255)
 
-    if (currentNode !== end) {
-        findPath(start)
+    if (openSet.length) {
+        currentNode = getBestNode(openSet)
+
+        if (currentNode === end || currentNode.wall) {
+            noLoop()
+            console.log("Done")
+        }
+
+        removeNode(currentNode, openSet)
+        closedSet.push(currentNode)
+
+        let neighbours = currentNode.neighbours
+
+        for (let i = 0; i < neighbours.length; i++) {
+            if (!findElement(neighbours[i], closedSet) && !neighbours[i].wall) {
+                let tempGScore = currentNode.gScore + dist(currentNode.i, currentNode.j, neighbours[i].i, neighbours[i].j)
+
+                var newPath = false
+                if (findElement(neighbours[i], openSet)) {
+                    if (tempGScore < neighbours[i].gScore) {
+                        neighbours[i].gScore = tempGScore
+                        newPath = true
+                    }
+                } else {
+                    neighbours[i].gScore = tempGScore
+                    newPath = true
+                    openSet.push(neighbours[i])
+                }
+
+                // Yes, it's a better path
+                if (newPath) {
+                    neighbours[i].cameFrom = currentNode
+                    neighbours[i].fScore = neighbours[i].gScore + heuristic(neighbours[i], end)
+                }
+            }
+        }
+    } else {
+        console.log('no solution')
+        noLoop()
     }
 
-    strokeWeight(5)
+
+    strokeWeight(20)
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
             const node = grid[i][j]
@@ -159,6 +297,14 @@ function draw() {
             }
             point(node.i, node.j)
         }
+    }
+
+    let temp = currentNode
+    optimalPath = [temp]
+
+    while (temp.cameFrom) {
+        optimalPath.push(temp.cameFrom)
+        temp = temp.cameFrom
     }
 
     stroke(0);
