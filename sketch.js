@@ -170,7 +170,7 @@ function setup() {
 
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
-            grid[i][j] = new gridNode(i * w + 25, j * w + 25, random(0, 5) > 4)
+            grid[i][j] = new gridNode(i * w + 25, j * w + 25, random(0, 5) > 3)
         }
     }
 
@@ -180,15 +180,18 @@ function setup() {
         }
     }
 
-    start = grid[0][0]
-    end = grid[cols - 1][rows - 1]
+    start = grid[floor(random(0, cols / 2))][floor(random(0, rows / 2))]
+    end =  grid[floor(random(cols / 2, cols - 1))][floor(random(rows / 2, rows - 1))]
+
+    start.wall = false
+    end.wall = false
 
     openSet.push(start)
 
 }
 
 function draw() {
-    background(255)
+    background(0)
 
     if (openSet.length) {
         currentNode = getBestNode(openSet)
@@ -231,20 +234,6 @@ function draw() {
         noLoop()
     }
 
-
-    strokeWeight(20)
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-            const node = grid[i][j]
-            if (node.wall) {
-                stroke(255, 0, 0);
-            } else {
-                stroke(255);
-            }
-            point(node.i, node.j)
-        }
-    }
-
     let temp = currentNode
     optimalPath = [temp]
 
@@ -253,7 +242,28 @@ function draw() {
         temp = temp.cameFrom
     }
 
-    stroke(0);
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            const node = grid[i][j]
+            if (node.wall) {
+                strokeWeight(20)
+                stroke(120, 0, 0);
+            } else {        
+                strokeWeight(10)        
+                stroke(0)
+
+                if (node === end) {
+                    stroke(0, 255, 255)
+                } else if (node === start) {
+                    stroke(0, 255, 255)
+                }
+            }
+            
+            point(node.i, node.j)
+        }
+    }
+
+    stroke(0, 255, 0);
     strokeWeight(5)
     noFill()
     beginShape();
