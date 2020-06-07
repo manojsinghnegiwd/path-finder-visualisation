@@ -57,105 +57,51 @@ function findElement(node, nodes) {
     return null
 }
 
-function aStar(start, end, h) {
-    let openSet = [start]
-    let closedSet = []
+// function aStar(start, end, h) {
+//     let openSet = [start]
+//     let closedSet = []
 
-    while (openSet.length) {
-        currentNode = getBestNode(openSet)
+//     while (openSet.length) {
+//         currentNode = getBestNode(openSet)
 
-        if (currentNode === end || currentNode.wall) {
-            return
-        }
+//         if (currentNode === end || currentNode.wall) {
+//             return
+//         }
 
-        removeNode(currentNode, openSet)
-        closedSet.push(currentNode)
+//         removeNode(currentNode, openSet)
+//         closedSet.push(currentNode)
 
-        let neighbours = currentNode.neighbours
+//         let neighbours = currentNode.neighbours
 
-        for (let i = 0; i < neighbours.length; i++) {
-            if (!findElement(neighbours[i], closedSet) && !neighbours[i].wall) {
-                let tempGScore = currentNode.gScore + dist(currentNode.i, currentNode.j, neighbours[i].i, neighbours[i].j)
+//         for (let i = 0; i < neighbours.length; i++) {
+//             if (!findElement(neighbours[i], closedSet) && !neighbours[i].wall) {
+//                 let tempGScore = currentNode.gScore + dist(currentNode.i, currentNode.j, neighbours[i].i, neighbours[i].j)
 
-                var newPath = false
-                if (findElement(neighbours[i], openSet)) {
-                    if (tempGScore < neighbours[i].gScore) {
-                        neighbours[i].gScore = tempGScore
-                        newPath = true
-                    }
-                } else {
-                    neighbours[i].gScore = tempGScore
-                    newPath = true
-                    openSet.push(neighbours[i])
-                }
+//                 var newPath = false
+//                 if (findElement(neighbours[i], openSet)) {
+//                     if (tempGScore < neighbours[i].gScore) {
+//                         neighbours[i].gScore = tempGScore
+//                         newPath = true
+//                     }
+//                 } else {
+//                     neighbours[i].gScore = tempGScore
+//                     newPath = true
+//                     openSet.push(neighbours[i])
+//                 }
 
-                // Yes, it's a better path
-                if (newPath) {
-                    neighbours[i].cameFrom = currentNode
-                    neighbours[i].fScore = neighbours[i].gScore + h(neighbours[i], end)
-                }
-            }
-        }
-    }
+//                 // Yes, it's a better path
+//                 if (newPath) {
+//                     neighbours[i].cameFrom = currentNode
+//                     neighbours[i].fScore = neighbours[i].gScore + h(neighbours[i], end)
+//                 }
+//             }
+//         }
+//     }
 
-    return []
+//     return []
 
-}
+// }
 
-async function getBestNeighbour(neighbours, end) {
-
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    let validNeighbours = []
-
-    for (let i = 0; i < neighbours.length; i++) {
-        if (!neighbours[i].wall) {
-            validNeighbours.push(neighbours[i])
-        }
-    }
-
-    let distanceMap = []
-
-    for (let i = 0; i < validNeighbours.length; i++) {
-        distanceMap.push(dist(validNeighbours[i].i, validNeighbours[i].j, end.i, end.j))
-    }
-
-    let minIndex = 0;
-    let minValue = distanceMap[minIndex];
-
-    for (let i = 0; i < distanceMap.length; i++) {
-        if (minValue > distanceMap[i]) {
-            minValue = distanceMap[i]
-            minIndex = i
-        }
-    }
-
-    return validNeighbours[minIndex]
-}
-
-async function findPath(current) {
-    currentNode = current
-
-    if (!current) {
-        return
-    }
-
-    if (end === start) {
-        return
-    }
-
-    if (end === current) {
-        optimalPath.push(current)
-        return
-    }
-
-    alreadyVisited.push(current)
-    optimalPath.push(current)
-
-    let bestNeighbour = await getBestNeighbour(current.neighbours, end)
-
-    await findPath(bestNeighbour)
-}
 
 function gridNode(i, j, isWall) {
     this.i = i
