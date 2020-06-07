@@ -1,4 +1,4 @@
-Path finding visualization using p5.js
+A star Path finding visualization using p5.js
 ====================
 
 <img src="./visulization.gif">
